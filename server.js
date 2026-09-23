@@ -7,6 +7,18 @@ const 역할디엠보내기 = require('./commands/역할디엠보내기.js');
 const 외활상태확인 = require('./commands/외활상태확인.js');
 
 const TOKEN = process.env.DISCORD_TOKEN;
+// Render의 포트 체크 에러를 방지하기 위한 간단한 웹 서버 코드
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('Bot is running safely!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Web server is listening on port ${PORT}`);
+});
 const EXTERNAL_ACTIVITY_DELAY = 90 * 60 * 1000;
 const voiceSessions = new Map();
 const externalActivityOpen = new Set();
@@ -27,7 +39,7 @@ function startVoiceSession(state) {
 
       externalActivityOpen.add(state.id);
       await state.member.send({
-        content: '외부활동이 열립니다',
+        content: `${state.member} 외부활동이 열립니다`,
         embeds: [
           new EmbedBuilder()
             .setColor(0x3498db)

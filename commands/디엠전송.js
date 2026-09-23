@@ -81,7 +81,10 @@ async function sendDirectMessages(members, content, guildName, onProgress) {
 
   for (const member of members.values()) {
     try {
-      await sendWithRetry(member, { content, embeds: [createServerNotice(guildName)] });
+      await sendWithRetry(member, {
+        content: `${member}\n${content}`,
+        embeds: [createServerNotice(guildName)],
+      });
       sent += 1;
     } catch (error) {
       failures.push({ member, reason: error.message });
