@@ -5,6 +5,7 @@ const 통방미참여자 = require('./commands/통방미참여자.js');
 const 전체디엠보내기 = require('./commands/전체디엠보내기.js');
 const 역할디엠보내기 = require('./commands/역할디엠보내기.js');
 const 외활상태확인 = require('./commands/외활상태확인.js');
+const 통방미참여자멘션 = require('./commands/통방미참여자멘션.js');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 // Render의 포트 체크 에러를 방지하기 위한 간단한 웹 서버 코드
@@ -107,6 +108,7 @@ client.on('interactionCreate', async (interaction) => {
       전체디엠보내기,
       역할디엠보내기,
       외활상태확인,
+      통방미참여자멘션,
     };
     const command = commands[interaction.commandName];
 
