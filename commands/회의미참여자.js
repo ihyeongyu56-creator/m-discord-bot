@@ -6,7 +6,7 @@ const {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('통방미참여자멘션')
+    .setName('회의미참여자')
     .setDescription('스테이지 채널에 들어오지 않은 역할 멤버를 멘션합니다.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption(option =>
