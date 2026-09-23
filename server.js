@@ -74,7 +74,11 @@ const client = new Client({
 client.externalActivityOpen = externalActivityOpen;
 
 client.once('ready', () => {
-  console.log(`${client.user.tag} 로그인 완료`);
+  client.user.setPresence({
+    activities: [{ name: '천안봇 실행중', type: 0 }],
+    status: 'online',
+  });
+  console.log(`천안봇 실행중 | ${client.user.tag} 로그인 완료`);
 
   for (const guild of client.guilds.cache.values()) {
     for (const state of guild.voiceStates.cache.values()) {
