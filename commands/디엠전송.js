@@ -1,4 +1,21 @@
 const { EmbedBuilder } = require('discord.js');
+const RETRYABLE_ERRORS = new Set([429, 500, 502, 503, 504, 'ECONNRESET', 'ETIMEDOUT']);
+
+function isRetryableError(error) {
+  return RETRYABLE_ERRORS.has(error?.status) || RETRYABLE_ERRORS.has(error?.code);
+}
+
+async function sendWithRetry(member, payload) {
+  for (let attempt = 0; attempt <= 2; attempt += 1) {
+    try {
+      await member.send(payload);
+      return;
+    } catch (error) {
+      if (!isRetryableError(error) || attempt === 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+  }
+}
 
 function createServerNotice(guildName) {
   return new EmbedBuilder()
@@ -64,7 +81,7 @@ async function sendDirectMessages(members, content, guildName, onProgress) {
 
   for (const member of members.values()) {
     try {
-      await member.send({ content, embeds: [createServerNotice(guildName)] });
+      await sendWithRetry(member, { content, embeds: [createServerNotice(guildName)] });
       sent += 1;
     } catch (error) {
       failures.push({ member, reason: error.message });

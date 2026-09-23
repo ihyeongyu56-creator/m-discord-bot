@@ -123,13 +123,19 @@ client.on('interactionCreate', async (interaction) => {
   } catch (error) {
     console.error(`명령어 실행 실패: ${interaction.commandName}`, error);
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply('명령어 실행 중 오류가 발생했습니다. 봇 콘솔 로그를 확인하세요.');
-    } else {
-      await interaction.reply('명령어 실행 중 오류가 발생했습니다.');
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply('명령어 실행 중 오류가 발생했습니다. 봇 콘솔 로그를 확인하세요.');
+      } else {
+        await interaction.reply('명령어 실행 중 오류가 발생했습니다.');
+      }
+    } catch (replyError) {
+      console.error('오류 안내 메시지도 전송하지 못했습니다.', replyError);
     }
   }
 });
 
 client.on('error', console.error);
-client.login(TOKEN);
+client.login(TOKEN).catch(error => {
+  console.error('Discord 로그인 실패:', error);
+});
