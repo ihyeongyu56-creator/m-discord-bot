@@ -1,0 +1,9 @@
+services:
+  discord-bot:
+    build: .
+    container_name: m-discord-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
