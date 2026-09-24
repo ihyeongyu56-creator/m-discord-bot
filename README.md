@@ -18,4 +18,4 @@ docker compose ps
 docker compose logs -f discord-bot
 ```
 
-`restart: unless-stopped` 설정으로 VM이 재부팅되거나 컨테이너가 종료될 때 자동으로 다시 시작합니다. 토큰은 저장소나 Docker 이미지에 넣지 않습니다.
+기본 포트는 `8080`으로 고정되어 있으며, 다른 서비스가 `3000`을 사용 중일 때도 자동으로 대체 포트를 찾아 부팅합니다. `restart: always` 설정으로 컨테이너가 비정상 종료되면 자동 재시작됩니다. 토큰은 저장소나 Docker 이미지에 넣지 않습니다.

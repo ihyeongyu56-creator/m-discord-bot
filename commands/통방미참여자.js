@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('통화방미참여자')
+        .setName('통방미참여자')
         .setDescription('특정 역할을 가졌으나 음성 채널에 참여하지 않은 사람을 확인합니다.')
         .addRoleOption(option =>
             option

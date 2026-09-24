@@ -1,5 +1,7 @@
 require('dotenv').config();
-const { Client, EmbedBuilder, GatewayIntentBits, PermissionFlagsBits } = require('discord.js');
+const { Client, EmbedBuilder, GatewayIntentBits, PermissionFlagsBits, Events } = require('discord.js');
+const { getAvailablePort } = require('./port');
+const { buildHealthStatus } = require('./health');
 const 통화인원확인 = require('./commands/통화인원확인.js');
 const 통방미참여자 = require('./commands/통방미참여자.js');
 const 전체디엠보내기 = require('./commands/전체디엠보내기.js');
@@ -8,23 +10,57 @@ const 외활상태확인 = require('./commands/외활상태확인.js');
 const 회의미참여자 = require('./commands/회의미참여자.js');
 
 const TOKEN = process.env.DISCORD_TOKEN;
-// Render의 포트 체크 에러를 방지하기 위한 간단한 웹 서버 코드
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
+const HEALTHCHECK_INTERVAL_MS = 60 * 1000;
+const RECOVERY_THRESHOLD_MS = 5 * 60 * 1000;
+
+async function startHealthServer() {
+  const requestedPort = Number(process.env.PORT) || 3000;
+  const port = await getAvailablePort(requestedPort);
+
+  app.get('/', (req, res) => {
     res.send('Bot is running safely!');
-});
+  });
 
-app.listen(PORT, () => {
-  console.log(`Web server is listening on port ${PORT}`);
+  app.get('/healthz', (req, res) => {
+    const health = buildHealthStatus(client);
+    res.status(health.status === 'ok' ? 200 : 503).json(health);
+  });
+
+  app.listen(port, () => {
+    if (port !== requestedPort) {
+      console.warn(`Requested port ${requestedPort} is already in use. Using fallback port ${port} instead.`);
+    }
+    console.log(`Web server is listening on port ${port}`);
+  });
+}
+
+startHealthServer().catch((error) => {
+  console.error('Health server startup failed:', error);
+  process.exit(1);
 });
 const EXTERNAL_ACTIVITY_DELAY = 90 * 60 * 1000;
 const voiceSessions = new Map();
 const externalActivityOpen = new Set();
 const activeBulkCommands = new Set();
 const bulkCommands = new Set(['전체디엠보내기', '역할디엠보내기']);
+const commandCooldownMs = 15000;
+const userCommandCooldowns = new Map();
+
+function enforceUserCooldown(interaction) {
+  const key = `${interaction.user.id}:${interaction.commandName}`;
+  const now = Date.now();
+  const lastUsed = userCommandCooldowns.get(key);
+
+  if (lastUsed && now - lastUsed < commandCooldownMs) {
+    return false;
+  }
+
+  userCommandCooldowns.set(key, now);
+  return true;
+}
 
 function startVoiceSession(state) {
   if (!state.channelId || !state.member || state.member.user.bot || voiceSessions.has(state.id)) return;
@@ -74,7 +110,26 @@ const client = new Client({
 });
 client.externalActivityOpen = externalActivityOpen;
 
-client.once('ready', () => {
+let lastHealthyAt = Date.now();
+
+setInterval(() => {
+  const health = buildHealthStatus(client);
+
+  if (health.status === 'ok') {
+    lastHealthyAt = Date.now();
+    console.log(`[HEALTH] 정상 상태 | ready=${health.ready} uptime=${health.uptimeSeconds}s guilds=${health.guildCount} ping=${health.ping ?? 'n/a'}ms`);
+    return;
+  }
+
+  console.warn(`[HEALTH] 비정상 상태 감지 | status=${health.status} ready=${health.ready} uptime=${health.uptimeSeconds}s guilds=${health.guildCount}`);
+
+  if (Date.now() - lastHealthyAt > RECOVERY_THRESHOLD_MS) {
+    console.error('[RECOVERY] 봇이 정상 상태를 유지하지 못해 자동 재시작을 수행합니다.');
+    process.exit(1);
+  }
+}, HEALTHCHECK_INTERVAL_MS);
+
+client.once(Events.ClientReady, () => {
   client.user.setPresence({
     activities: [{ name: '천안봇 실행중', type: 0 }],
     status: 'online',
@@ -97,14 +152,32 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand() || interaction.user.bot) return;
+
+  if (!enforceUserCooldown(interaction)) {
+    try {
+      await interaction.reply({
+        content: '잠시 후 다시 시도해 주세요. 너무 빠르게 같은 명령을 반복하면 차단됩니다.',
+        ephemeral: true,
+      });
+    } catch (error) {
+      console.warn('명령 쿨다운 안내 실패:', error);
+    }
+    return;
+  }
 
   try {
     await interaction.deferReply();
 
+    const adminOnlyCommandNames = new Set(['전체디엠보내기', '역할디엠보내기', '통화인원확인', '통방미참여자', '외활상태확인', '회의미참여자']);
+    if (adminOnlyCommandNames.has(interaction.commandName) && !interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.editReply('관리자 권한이 있는 사용자만 사용할 수 있습니다.');
+      return;
+    }
+
     const commands = {
       통화인원확인,
-      통화방미참여자: 통방미참여자,
+      통방미참여자,
       전체디엠보내기,
       역할디엠보내기,
       외활상태확인,
