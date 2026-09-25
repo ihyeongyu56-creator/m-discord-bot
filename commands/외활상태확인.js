@@ -2,18 +2,22 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('disc
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('외활상태확인')
+    .setName('external-activity-status')
+    .setNameLocalization('ko', '외활상태확인')
     .setDescription('현재 통화방 멤버들의 외활 상태를 확인합니다.')
+    .setDescriptionLocalization('ko', '현재 통화방 멤버들의 외활 상태를 확인합니다.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addRoleOption(option =>
       option
-        .setName('역할')
+        .setName('role')
+        .setNameLocalization('ko', '역할')
         .setDescription('상태를 확인할 역할')
+        .setDescriptionLocalization('ko', '상태를 확인할 역할')
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    const role = interaction.options.getRole('역할');
+    const role = interaction.options.getRole('role');
     const openMembers = interaction.client.externalActivityOpen;
     const lines = [];
 

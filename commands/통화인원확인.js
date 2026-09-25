@@ -2,8 +2,10 @@ const { SlashCommandBuilder, EmbedBuilder, ChannelType } = require('discord.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('통화인원확인')
-    .setDescription('서버 전체 음성 채널의 총 인원(봇 제외)을 확인합니다.'),
+    .setName('voice-member-count')
+    .setNameLocalization('ko', '통화인원확인')
+    .setDescription('서버 전체 음성 채널의 총 인원(봇 제외)을 확인합니다.')
+    .setDescriptionLocalization('ko', '서버 전체 음성 채널의 총 인원(봇 제외)을 확인합니다.'),
 
   async execute(interaction) {
     const guild = interaction.guild;

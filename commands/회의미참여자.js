@@ -6,26 +6,32 @@ const {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('회의미참여자')
+    .setName('meeting-missing-members')
+    .setNameLocalization('ko', '회의미참여자')
     .setDescription('스테이지 채널에 들어오지 않은 역할 멤버를 멘션합니다.')
+    .setDescriptionLocalization('ko', '스테이지 채널에 들어오지 않은 역할 멤버를 멘션합니다.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption(option =>
       option
-        .setName('채널')
+        .setName('channel')
+        .setNameLocalization('ko', '채널')
         .setDescription('확인할 음성 스테이지 채널')
+        .setDescriptionLocalization('ko', '확인할 음성 스테이지 채널')
         .addChannelTypes(ChannelType.GuildStageVoice)
         .setRequired(true)
     )
     .addRoleOption(option =>
       option
-        .setName('역할')
+        .setName('role')
+        .setNameLocalization('ko', '역할')
         .setDescription('확인할 역할')
+        .setDescriptionLocalization('ko', '확인할 역할')
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    const channel = interaction.options.getChannel('채널');
-    const role = interaction.options.getRole('역할');
+    const channel = interaction.options.getChannel('channel');
+    const role = interaction.options.getRole('role');
 
     await interaction.guild.members.fetch();
 

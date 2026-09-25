@@ -8,6 +8,17 @@ const 전체디엠보내기 = require('./commands/전체디엠보내기.js');
 const 역할디엠보내기 = require('./commands/역할디엠보내기.js');
 const 외활상태확인 = require('./commands/외활상태확인.js');
 const 회의미참여자 = require('./commands/회의미참여자.js');
+const 도움말 = require('./commands/도움말.js');
+
+const commandModules = [
+  통화인원확인,
+  통방미참여자,
+  전체디엠보내기,
+  역할디엠보내기,
+  외활상태확인,
+  회의미참여자,
+  도움말,
+];
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const express = require('express');
@@ -45,7 +56,7 @@ const EXTERNAL_ACTIVITY_DELAY = 90 * 60 * 1000;
 const voiceSessions = new Map();
 const externalActivityOpen = new Set();
 const activeBulkCommands = new Set();
-const bulkCommands = new Set(['전체디엠보내기', '역할디엠보내기']);
+const bulkCommands = new Set(['all-dm-send', 'role-dm-send']);
 const commandCooldownMs = 15000;
 const userCommandCooldowns = new Map();
 
@@ -169,21 +180,29 @@ client.on('interactionCreate', async (interaction) => {
   try {
     await interaction.deferReply();
 
-    const adminOnlyCommandNames = new Set(['전체디엠보내기', '역할디엠보내기', '통화인원확인', '통방미참여자', '외활상태확인', '회의미참여자']);
+    const adminOnlyCommandNames = new Set([
+      'all-dm-send',
+      'role-dm-send',
+      'voice-member-count',
+      'voice-room-missing',
+      'external-activity-status',
+      'meeting-missing-members',
+    ]);
     if (adminOnlyCommandNames.has(interaction.commandName) && !interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
       await interaction.editReply('관리자 권한이 있는 사용자만 사용할 수 있습니다.');
       return;
     }
 
-    const commands = {
-      통화인원확인,
-      통방미참여자,
-      전체디엠보내기,
-      역할디엠보내기,
-      외활상태확인,
-      회의미참여자,
-    };
-    const command = commands[interaction.commandName];
+    const commands = new Map();
+    for (const command of commandModules) {
+      commands.set(command.data.name, command);
+      const localizedName = command.data.name_localizations?.ko;
+      if (localizedName) {
+        commands.set(localizedName, command);
+      }
+    }
+
+    const command = commands.get(interaction.commandName);
 
     if (!command) {
       await interaction.editReply('등록되지 않은 명령어입니다.');

@@ -3,25 +3,31 @@ const { createCompletionEmbed, createProgressEmbed, sendDirectMessages } = requi
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('역할디엠보내기')
+    .setName('role-dm-send')
+    .setNameLocalization('ko', '역할디엠보내기')
     .setDescription('특정 역할의 멤버에게 DM을 보냅니다.')
+    .setDescriptionLocalization('ko', '특정 역할의 멤버에게 DM을 보냅니다.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addRoleOption(option =>
       option
-        .setName('역할')
+        .setName('role')
+        .setNameLocalization('ko', '역할')
         .setDescription('DM을 보낼 역할')
+        .setDescriptionLocalization('ko', 'DM을 보낼 역할')
         .setRequired(true)
     )
     .addStringOption(option =>
       option
-        .setName('내용')
+        .setName('content')
+        .setNameLocalization('ko', '내용')
         .setDescription('보낼 메시지 내용')
+        .setDescriptionLocalization('ko', '보낼 메시지 내용')
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    const role = interaction.options.getRole('역할');
-    const content = interaction.options.getString('내용');
+    const role = interaction.options.getRole('role');
+    const content = interaction.options.getString('content');
     await interaction.guild.members.fetch();
 
     const members = role.members.filter(member => !member.user.bot);

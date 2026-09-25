@@ -2,17 +2,21 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('통방미참여자')
+        .setName('voice-room-missing')
+        .setNameLocalization('ko', '통방미참여자')
         .setDescription('특정 역할을 가졌으나 음성 채널에 참여하지 않은 사람을 확인합니다.')
+        .setDescriptionLocalization('ko', '특정 역할을 가졌으나 음성 채널에 참여하지 않은 사람을 확인합니다.')
         .addRoleOption(option =>
             option
-                .setName('역할')
+                .setName('role')
+                .setNameLocalization('ko', '역할')
                 .setDescription('확인할 역할을 선택하세요.')
+                .setDescriptionLocalization('ko', '확인할 역할을 선택하세요.')
                 .setRequired(true)
         ),
 
     async execute(interaction) {
-        const role = interaction.options.getRole('역할');
+        const role = interaction.options.getRole('role');
         const guild = interaction.guild;
 
         // 역할 멤버 전체를 캐시에 동기화한 뒤 역할 기준으로 필터링합니다.
